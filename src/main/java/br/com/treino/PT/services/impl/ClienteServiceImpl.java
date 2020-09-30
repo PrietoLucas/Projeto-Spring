@@ -1,5 +1,8 @@
 package br.com.treino.PT.services.impl;
 
+import br.com.treino.PT.exceptions.ResourceNotFoundException;
+import br.com.treino.PT.helpers.ClienteHelper;
+import br.com.treino.PT.models.dto.ClienteDTO;
 import br.com.treino.PT.models.entities.Cliente;
 import br.com.treino.PT.repository.ClienteRepository;
 import br.com.treino.PT.services.ClienteService;
@@ -7,11 +10,11 @@ import br.com.treino.PT.utils.SenderEmailUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ClienteServiceImpl implements ClienteService {
@@ -23,9 +26,8 @@ public class ClienteServiceImpl implements ClienteService {
 
     Logger logger = LoggerFactory.getLogger(ClienteServiceImpl.class);
 
-
     @Override
-    @Scheduled(fixedRate = 15000)
+//    @Scheduled(fixedRate = 15000)
     public void buscarClientesPendentes() {
         logger.info("Iniciando verificação no Banco!");
         try {
@@ -58,6 +60,19 @@ public class ClienteServiceImpl implements ClienteService {
             logger.error("Erro: "+e);
         }
         logger.info("Finalizado verificação no Banco!");
+    }
+
+    @Override
+    public List<ClienteDTO> listarTodosClientes(){
+        List<ClienteDTO> lista = clienteRepository.findAll()
+                .stream().map(ClienteHelper::toDTO)
+                .collect(Collectors.toList());
+
+        if(lista.isEmpty()){
+            throw new ResourceNotFoundException("Não foi encontrado nenhum registro!");
+        }
+
+        return lista;
     }
 
 }
